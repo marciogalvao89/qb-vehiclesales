@@ -61,7 +61,7 @@ RegisterNetEvent('qb-occasions:server:sellVehicle', function(vehiclePrice, vehic
     local Player = QBCore.Functions.GetPlayer(src)
     MySQL.query('DELETE FROM player_vehicles WHERE plate = ? AND vehicle = ?',{vehicleData.plate, vehicleData.model})
     MySQL.insert('INSERT INTO occasion_vehicles (seller, price, description, plate, model, mods, occasionid) VALUES (?, ?, ?, ?, ?, ?, ?)',{Player.PlayerData.citizenid, vehiclePrice, vehicleData.desc, vehicleData.plate, vehicleData.model,json.encode(vehicleData.mods), generateOID()})
-    TriggerEvent("qb-log:server:CreateLog", "vehicleshop", "Vehicle for Sale", "red","**" .. GetPlayerName(src) .. "** has a " .. vehicleData.model .. " priced at " .. vehiclePrice)
+    TriggerEvent('qb-log:server:CreateLog', src, "vehicleshop", "Vehicle for Sale", "red","**" .. GetPlayerName(src) .. "** has a " .. vehicleData.model .. " priced at " .. vehiclePrice)
     TriggerClientEvent('qb-occasion:client:refreshVehicles', -1)
 end)
 
@@ -77,7 +77,7 @@ RegisterNetEvent('qb-occasions:server:sellVehicleBack', function(vehData)
         end
     end
     local payout = math.floor(tonumber(price * 0.5)) -- This will give you half of the cars value
-    Player.Functions.AddMoney('bank', payout)
+    Player.Functions.AddMoney('bank', payout, "Stand Vendas")
     TriggerClientEvent('QBCore:Notify', src, Lang:t('success.sold_car_for_price', { value = payout }), 'success', 5500)
     MySQL.query('DELETE FROM player_vehicles WHERE plate = ?', {plate})
 end)
@@ -102,7 +102,7 @@ RegisterNetEvent('qb-occasions:server:buyVehicle', function(vehicleData)
                     0
                 })
             if SellerData then
-                SellerData.Functions.AddMoney('bank', NewPrice)
+                SellerData.Functions.AddMoney('bank', NewPrice, "StandVendas")
             else
                 local BuyerData = MySQL.query.await('SELECT * FROM players WHERE citizenid = ?',{SellerCitizenId})
                 if BuyerData[1] then
@@ -111,7 +111,7 @@ RegisterNetEvent('qb-occasions:server:buyVehicle', function(vehicleData)
                     MySQL.update('UPDATE players SET money = ? WHERE citizenid = ?', {json.encode(BuyerMoney), SellerCitizenId})
                 end
             end
-            TriggerEvent("qb-log:server:CreateLog", "vehicleshop", "bought", "green", "**" .. GetPlayerName(src) .. "** has bought for " .. result[1].price .. " (" .. result[1].plate ..") from **" .. SellerCitizenId .. "**")
+            TriggerEvent('qb-log:server:CreateLog', src, "vehicleshop", "bought", "green", "**" .. GetPlayerName(src) .. "** has bought for " .. result[1].price .. " (" .. result[1].plate ..") from **" .. SellerCitizenId .. "**")
             TriggerClientEvent("qb-occasions:client:BuyFinished", src, result[1])
             TriggerClientEvent('qb-occasion:client:refreshVehicles', -1)
             MySQL.query('DELETE FROM occasion_vehicles WHERE plate = ? AND occasionid = ?',{result[1].plate, result[1].occasionid})
